@@ -5,8 +5,8 @@ import os
 import threading
 import secrets
 from utils import getconfig, getlog
-from packet import generate_consecutive_packets, detectReplayAttackPacket, customized_packet
-from connection import get_result
+from .packet import generate_consecutive_packets, detectReplayAttackPacket, customized_packet
+from .connection import get_result
 
 config = getconfig.config
 logger = getlog.setup_logging("wuyan")

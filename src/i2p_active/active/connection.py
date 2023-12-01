@@ -1,6 +1,6 @@
 import socket
 from utils import getconfig, getlog
-from packet import packet_generate
+from .packet import packet_generate
 import time
 
 config = getconfig.config

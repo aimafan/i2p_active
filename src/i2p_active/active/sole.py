@@ -1,6 +1,6 @@
 import time
-from connection import connect
-from packet import generate_consecutive_packets
+from .connection import connect
+from .packet import generate_consecutive_packets
 from utils import getlog, getconfig
 
 logger = getlog.setup_logging()
