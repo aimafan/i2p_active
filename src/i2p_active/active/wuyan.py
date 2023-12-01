@@ -10,8 +10,6 @@ from .connection import get_result
 
 config = getconfig.config
 logger = getlog.setup_logging("wuyan")
-max_threads = int(config['wuyan']['threads_num'])  # 最多开70个线程
-semaphore = threading.Semaphore(max_threads)
 
 
 def start_isi2p(ip_port):
@@ -42,11 +40,17 @@ def action():
 
             # 将元素添加到列表
             my_list.append(elements)
-
+    
+    max_threads = int(config['wuyan']['threads_num'])  # 最多开70个线程
+    semaphore = threading.Semaphore(max_threads)
     threads = []
     
+    def thread_task(ip_port):
+        with semaphore:
+            start_isi2p(ip_port)
+    
     for ip_port in my_list:
-        thread = threading.Thread(target=start_isi2p, args=(ip_port,))
+        thread = threading.Thread(target=thread_task, args=(ip_port,))
         # start_isi2p(ip_port)
         threads.append(thread)
         thread.start()
