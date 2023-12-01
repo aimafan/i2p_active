@@ -1,6 +1,6 @@
-import secrets
+pre_packet = b'0'
 
-result = ["12321", "12312", 22, 23, 53]
-
-for i in range(1, 3):
-    print(i)
+if pre_packet == b'0':
+    print(pre_packet)
+if pre_packet != b'0':
+    print(f"no + {pre_packet}")

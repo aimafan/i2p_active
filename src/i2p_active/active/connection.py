@@ -5,8 +5,8 @@ import time
 
 config = getconfig.config
 logger = getlog.setup_logging()
-logger_result = getlog.setup_logging("result")
-logger_isi2p = getlog.setup_logging("isi2p")
+logger_result = getlog.setup_logging("result.log")
+logger_isi2p = getlog.setup_logging("isi2p.log")
 
 timeout_second = int(config['Connection']['timeout_second'])
 socket_second = int(config['Connection']['socket_second'])
@@ -84,7 +84,6 @@ def get_result(host, port):
             if count == 1:
                 continue
             elif count == -1:
-                result.append(str(count))
                 break
             else:
                 if num == 0:
@@ -92,8 +91,10 @@ def get_result(host, port):
                     elapsed_time = end_time - start_time
                 break
             
-
+        
         result.append(str(count))
+        if count == -1:
+            break
     logger_result.info(":".join(result))
     is_i2p(result, elapsed_time)
 

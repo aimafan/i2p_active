@@ -10,8 +10,7 @@ from .connection import get_result
 
 config = getconfig.config
 logger = getlog.setup_logging("wuyan")
-
-max_threads = config['wuyan']['threads_num']  # 最多开70个线程
+max_threads = int(config['wuyan']['threads_num'])  # 最多开70个线程
 semaphore = threading.Semaphore(max_threads)
 
 

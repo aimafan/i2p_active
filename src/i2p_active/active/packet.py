@@ -24,6 +24,7 @@ def generate_consecutive_packets(packet_size: int, pre_packet=b'0', packet_count
 
     """
     a = []
+
     if pre_packet != b'0':
         a.append(pre_packet + random_create(packet_size - 8))
     for i in range(1, packet_count):
@@ -58,7 +59,8 @@ def packet_generate():
     packet_dic[1], pre = detectReplayAttackPacket(32)
     packet_dic[2] = generate_consecutive_packets(32, pre)
     packet_dic[3] = customized_packet(129, 63)
-    packet_dic[4] = generate_consecutive_packets(1, 1)
+    packet_dic[4] = generate_consecutive_packets(packet_size=1, packet_count=1)
     packet_dic[5] = generate_consecutive_packets(1)
+
 
     return packet_dic
