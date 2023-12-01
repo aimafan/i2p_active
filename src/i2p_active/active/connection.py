@@ -21,6 +21,9 @@ def is_i2p(result, elapsed_time):
         if result[i] == -1:
             logger_isi2p.info(f'{host}:{port} 无法连接')
             return
+        elif result[i] == -2:
+            logger_isi2p.info(f'{host}:{port} 不是i2p节点')
+            return
     ## 连接持续时间测试
     if elapsed_time > 9.5 and elapsed_time < 12.5:
         true_count += 1
@@ -83,7 +86,7 @@ def get_result(host, port):
             count = connect(host, port, packet)
             if count == 1:
                 continue
-            elif count == -1:
+            elif count == -1 and count == -2:
                 break
             else:
                 if num == 0:
@@ -93,7 +96,7 @@ def get_result(host, port):
             
         
         result.append(str(count))
-        if count == -1:
+        if count == -1 and count == -2:
             break
     logger_result.info(":".join(result))
     is_i2p(result, elapsed_time)
@@ -143,7 +146,7 @@ def connect(host, port, packetbyte):
                 else:
                     #能够接收到数据，不符合obfs4，obfs4应该接收不到数据
                     logger.warn(f'能够接收到返回消息:{data},不符合I2P协议特征')
-                    hasReturnByte=True
+                    count = -2
                     break 
             except socket.timeout:
             #正常收不到数据，超时2秒
