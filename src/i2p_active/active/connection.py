@@ -96,7 +96,7 @@ def get_result(host, port):
             
         
         result.append(str(count))
-        if count == -1 and count == -2:
+        if count == -1 or count == -2:
             break
     logger_result.info(":".join(result))
     is_i2p(result, elapsed_time)
