@@ -1,30 +1,31 @@
+# 在dell主机上运行，开多线程
 import time
-from .connection import connect
-from .packet import generate_consecutive_packets
-from utils import getlog, getconfig
+import socket
+import os
+import threading
+import secrets
+from utils import getconfig, getlog
+from .packet import generate_consecutive_packets, detectReplayAttackPacket, customized_packet
+from .connection import get_result
 
-logger = getlog.setup_logging()
 config = getconfig.config
+# logger = getlog.setup_logging("i2p")
 
-def sole_run():
-    timegap = int(config['sole']['timegap'])
-    host = config['sole']['host']
-    port = int(config['sole']['port'])
-    packet_size = int(config['sole']['packet_size'])
 
-    while(True):
+def start_isi2p(ip_port):
+    host = ip_port[0]
+    port = ip_port[1]
+    
+    # 使用 acquire() 获取信号量，控制并发数量
+    # with semaphore:
+    get_result(host, port)
 
-        start_time = time.time()
-        packet_list = generate_consecutive_packets(packet_size)
-        count = connect(host, port, packet_list)
-        # 结束计时
-        end_time = time.time()
+def action():
 
-        # 计算并打印运行时间
-        elapsed_time = end_time - start_time
-        logger.info(f"花费的时间: {elapsed_time}")
-        logger.info(f"发送数据包的个数：{count}")
-        time.sleep(timegap)
+    my_list = ["142.171.48.35", 27759]
+    start_isi2p(my_list)
 
-if __name__ == "__main__":
-    sole_run()
+
+
+if __name__=='__main__':
+    action()
