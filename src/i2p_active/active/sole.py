@@ -11,6 +11,8 @@ from .connection import get_result
 config = getconfig.config
 # logger = getlog.setup_logging("i2p")
 
+sole_host = config['solo']['host']
+sole_port = int(config['solo']['port'])
 
 def start_isi2p(ip_port):
     host = ip_port[0]
@@ -22,7 +24,7 @@ def start_isi2p(ip_port):
 
 def action():
 
-    my_list = ["142.171.48.35", 27759]
+    my_list = [sole_host, sole_port]
     start_isi2p(my_list)
 
 

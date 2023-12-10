@@ -75,12 +75,13 @@ def get_result(host, port):
     result = []
     result.append(host)
     result.append(str(port))
-    
+    count = 0
     byteNumSinglePacket = packet_generate()
     elapsed_time = 0
     for num in byteNumSinglePacket:
         packet = byteNumSinglePacket[num]
         for i in range(1, 4):       # 测试3次，防止因网络问题中断，只要有一次没中断就按照没中断的这次来
+            start_time = 0
             if num == 0:
                 start_time = time.time()
             count = connect(host, port, packet)

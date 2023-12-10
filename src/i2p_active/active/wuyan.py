@@ -36,7 +36,7 @@ def action():
             # 将元素转换为适当的数据类型，这里假设元素是整数
             # elements.pop()
             
-            elements[1] = int(elements[1])
+            elements[1] = int(elements[1]) # type: ignore
 
             # 将元素添加到列表
             my_list.append(elements)
