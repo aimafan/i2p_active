@@ -12,7 +12,7 @@ timeout_second = int(config['Connection']['timeout_second'])
 socket_second = int(config['Connection']['socket_second'])
 correctCountThreshold = int(config['Connection']['correctCountThreshold'])
 
-def is_i2p(result, ):
+def is_i2p(result):
     host = result[0]
     port = result[1]
     true_count = 0
@@ -34,28 +34,28 @@ def is_i2p(result, ):
     #     return
     
     # 包大小测试
-    if result[3] >= 3 and result[3] <= 6:
+    if result[2] >= 3 and result[2] <= 6:
         true_count += 1
-    elif result[3] > 6:
+    elif result[2] > 6:
         logger_isi2p.info(f'{host}:{port} 不是i2p节点，数据包大小测试 1 未通过')
         return
     
     # 重放中断测试
-    if result[4] == 2:
+    if result[3] == 2:
         true_count += 1
-    elif result[4] > 2:
+    elif result[3] > 2:
         logger_isi2p.info(f'{host}:{port} 不是i2p节点，重放测试未通过')
         return
     
     # 数据包大小测试2
-    if result[5] == 2:
+    if result[4] == 2:
         true_count += 1
-    elif result[5] > 2:
+    elif result[4] > 2:
         logger_isi2p.info(f'{host}:{port} 不是i2p节点，数据包测试2未通过')
         return
 
     # 黑名单测试
-    if result[7] == 1:
+    if result[6] == 1:
         true_count += 1
     else:
         logger_isi2p.info(f'{host}:{port} 不是i2p节点，黑名单测试未通过')

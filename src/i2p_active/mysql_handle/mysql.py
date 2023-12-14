@@ -91,7 +91,7 @@ class MySQLPusher:
 
         # 定义文件名
         file_name = os.path.join(*os.path.dirname(os.path.abspath(__file__)).split("/")[:-3])
-        file_name = os.path.join("/" + file_name, "data", f"{current_time}_output.csv")
+        file_name = os.path.join("/" + file_name, "data", f"output.csv")
 
         connection = pymysql.connect(**self.mysql_config)
         cursor = connection.cursor()
