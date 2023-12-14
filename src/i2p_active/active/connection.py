@@ -12,7 +12,7 @@ timeout_second = int(config['Connection']['timeout_second'])
 socket_second = int(config['Connection']['socket_second'])
 correctCountThreshold = int(config['Connection']['correctCountThreshold'])
 
-def is_i2p(result, elapsed_time):
+def is_i2p(result, ):
     host = result[0]
     port = result[1]
     true_count = 0
@@ -25,13 +25,13 @@ def is_i2p(result, elapsed_time):
             logger_isi2p.info(f'{host}:{port} 不是i2p节点')
             return
     ## 连接持续时间测试
-    if elapsed_time > 9.5 and elapsed_time < 12.5:
-        true_count += 1
-    elif elapsed_time < 1:
-        pass
-    else:
-        logger_isi2p.info(f'{host}:{port} 不是i2p节点，连接持续时间测试未通过')
-        return
+    # if elapsed_time > 9.5 and elapsed_time < 12.5:
+    #     true_count += 1
+    # elif elapsed_time < 1:
+    #     pass
+    # else:
+    #     logger_isi2p.info(f'{host}:{port} 不是i2p节点，连接持续时间测试未通过')
+    #     return
     
     # 包大小测试
     if result[3] >= 3 and result[3] <= 6:
@@ -77,22 +77,22 @@ def get_result(host, port):
     result.append(str(port))
     count = 0
     byteNumSinglePacket = packet_generate()
-    elapsed_time = 0
+    # elapsed_time = 0
     for num in byteNumSinglePacket:
         packet = byteNumSinglePacket[num]
         for i in range(1, 4):       # 测试3次，防止因网络问题中断，只要有一次没中断就按照没中断的这次来
-            start_time = 0
-            if num == 0:
-                start_time = time.time()
+            # start_time = 0
+            # if num == 0:
+            #     start_time = time.time()
             count = connect(host, port, packet)
             if count == 1:
                 continue
-            elif count == -1 and count == -2:
+            elif count == -1 or count == -2:
                 break
             else:
-                if num == 0:
-                    end_time = time.time()
-                    elapsed_time = end_time - start_time
+                # if num == 0:
+                #     end_time = time.time()
+                #     elapsed_time = end_time - start_time
                 break
             
         
@@ -100,7 +100,7 @@ def get_result(host, port):
         if count == -1 or count == -2:
             break
     logger_result.info(":".join(result))
-    is_i2p(result, elapsed_time)
+    is_i2p(result)
 
 
 def connect(host, port, packetbyte):

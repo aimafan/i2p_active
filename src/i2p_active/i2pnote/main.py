@@ -1,6 +1,6 @@
 from .crawl_netdb import run_crawl
 from .crawl_version import get_versions
-from .mysql import MySQLPusher
+from mysql_handle.mysql import MySQLPusher
 from concurrent.futures import ThreadPoolExecutor
 import threading
 import time

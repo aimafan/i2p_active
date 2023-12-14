@@ -54,12 +54,13 @@ def customized_packet(packet_size: int, pre_size: int, packet_count=10):
 
 # 进行多次连接中包的生成
 def packet_generate():
-    packet_dic = {0: [], 1: [], 2: [], 3: [], 4: [], 5: []}
-    packet_dic[0] = generate_consecutive_packets(1)
+    # packet_dic = {0: [], 1: [], 2: [], 3: [], 4: [], 5: []}
+    packet_dic = {1: [], 2: [], 3: [], 4: [], 5: []}
+    # packet_dic[0] = generate_consecutive_packets(1, packet_count=70)
     packet_dic[1], pre = detectReplayAttackPacket(32)
     packet_dic[2] = generate_consecutive_packets(32, pre)
     packet_dic[3] = customized_packet(129, 63)
-    packet_dic[4] = generate_consecutive_packets(packet_size=1, packet_count=1)
+    packet_dic[4] = generate_consecutive_packets(packet_size=1, packet_count=3)
     packet_dic[5] = generate_consecutive_packets(1)
 
 
