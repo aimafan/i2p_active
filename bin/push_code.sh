@@ -12,11 +12,11 @@ cd $script_dir/../../
 
 tar cf i2p_active.tar --exclude="i2p_active/.venv" --exclude="i2p_active/.git" i2p_active
 
-scp i2p_active.tar vps1:~/
+REMOTE_SERVER=vps1
+scp i2p_active.tar $REMOTE_SERVER:~/
 
 COMMAND="rm -rf i2p_active; tar xf i2p_active.tar"
 
-REMOTE_SERVER=vps1
 
 # 使用 SSH 执行远程命令
 ssh ${REMOTE_SERVER} "${COMMAND}"

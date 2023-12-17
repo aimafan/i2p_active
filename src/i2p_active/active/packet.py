@@ -1,4 +1,5 @@
 import secrets
+import random
 
 
 def random_create(length: int):
@@ -28,6 +29,8 @@ def generate_consecutive_packets(packet_size: int, pre_packet=b'0', packet_count
     if pre_packet != b'0':
         a.append(pre_packet + random_create(packet_size - 8))
     for i in range(1, packet_count):
+        if packet_size == 1:
+            packet_size = random.randint(1, 3)
         data = random_create(packet_size)
         a.append(data)
     return a
@@ -54,9 +57,9 @@ def customized_packet(packet_size: int, pre_size: int, packet_count=10):
 
 # 进行多次连接中包的生成
 def packet_generate():
-    # packet_dic = {0: [], 1: [], 2: [], 3: [], 4: [], 5: []}
-    packet_dic = {1: [], 2: [], 3: [], 4: [], 5: []}
-    # packet_dic[0] = generate_consecutive_packets(1, packet_count=70)
+    packet_dic = {0: [], 1: [], 2: [], 3: [], 4: [], 5: []}
+    # packet_dic = {1: [], 2: [], 3: [], 4: [], 5: []}
+    packet_dic[0] = generate_consecutive_packets(1, packet_count=70)
     packet_dic[1], pre = detectReplayAttackPacket(32)
     packet_dic[2] = generate_consecutive_packets(32, pre)
     packet_dic[3] = customized_packet(129, 63)
@@ -64,4 +67,23 @@ def packet_generate():
     packet_dic[5] = generate_consecutive_packets(1)
 
 
+    return packet_dic
+
+# 第二次探测连接中包的生成
+def packet2_generate():
+    packet_dic = {6: [], 7: [], 8: [], 9: []}
+    packet_dic[6] = generate_consecutive_packets(1, packet_count=70)
+    def one62one():
+        a = []
+        a.append(random_create(1))
+        a.append(random_create(62))
+        a.append(random_create(1))
+        for i in range(1, 10):
+            data = random_create(1)
+            a.append(data)
+        return a
+    packet_dic[7] = one62one()
+    packet_dic[8] = one62one()
+    packet_dic[9] = one62one()
+    
     return packet_dic

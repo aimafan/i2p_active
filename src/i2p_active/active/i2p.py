@@ -34,20 +34,20 @@ def action():
             my_list.append((row['ntcp2_ipv4'], int(row['ntcp2_ipv4_port'])))
     
     max_threads = int(config['i2p']['threads_num'])  # 最多开70个线程
-    semaphore = threading.Semaphore(max_threads)
-    threads = []
+    # semaphore = threading.Semaphore(max_threads)
+    # threads = []
     
-    def thread_task(ip_port):
-        with semaphore:
-            start_isi2p(ip_port)
+    # def thread_task(ip_port):
+    #     with semaphore:
+    #         start_isi2p(ip_port)
     
     for ip_port in my_list:
-        thread = threading.Thread(target=thread_task, args=(ip_port,))
-        # start_isi2p(ip_port)
-        threads.append(thread)
-        thread.start()
-    for thread in threads:
-        thread.join()
+    #     thread = threading.Thread(target=thread_task, args=(ip_port,))
+        start_isi2p(ip_port)
+    #     threads.append(thread)
+    #     thread.start()
+    # for thread in threads:
+    #     thread.join()
 
 
 if __name__=='__main__':

@@ -14,7 +14,7 @@ python -m mysql_handle.mysql
 
 REMOTE_SERVER=vps1
 
-scp $script_dir/../data/output.csv vps1:~/i2p_active/data/
+scp $script_dir/../data/output.csv $REMOTE_SERVER:~/i2p_active/data/
 
 # # 在远程服务器上执行的命令或脚本
 # COMMAND="bash ~/i2p_active/bin/i2p.sh"

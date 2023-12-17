@@ -1,12 +1,15 @@
 import socket
 from utils import getconfig, getlog
-from .packet import packet_generate
+from .packet import packet_generate, packet2_generate
 import time
 
 config = getconfig.config
 logger = getlog.setup_logging()
-logger_result = getlog.setup_logging("result.log")
+
 logger_isi2p = getlog.setup_logging("isi2p.log")
+logger_isi2p2 = getlog.setup_logging("isi2p2.log")
+logger_result = getlog.setup_logging("result.log")
+logger_result2 = getlog.setup_logging("result2.log")
 
 timeout_second = int(config['Connection']['timeout_second'])
 socket_second = int(config['Connection']['socket_second'])
@@ -20,87 +23,135 @@ def is_i2p(result):
         result[i] = int(result[i])
         if result[i] == -1:
             logger_isi2p.info(f'{host}:{port} 无法连接')
-            return
+            return True
         elif result[i] == -2:
-            logger_isi2p.info(f'{host}:{port} 不是i2p节点')
-            return
-    ## 连接持续时间测试
-    # if elapsed_time > 9.5 and elapsed_time < 12.5:
-    #     true_count += 1
-    # elif elapsed_time < 1:
-    #     pass
-    # else:
-    #     logger_isi2p.info(f'{host}:{port} 不是i2p节点，连接持续时间测试未通过')
-    #     return
+            logger_isi2p.info(f'{host}:{port} 第一次测试失败')
+            return True
+        
+    # 连接持续时间测试
+    if result[2] >= 5:
+        true_count += 1
+    elif result[2] > 1 and result[2] < 5:
+        logger_isi2p.info(f'{host}:{port} 第一次测试失败，连接持续性测试未通过')
+        return
     
     # 包大小测试
-    if result[2] >= 3 and result[2] <= 6:
+    if result[3] >= 3 and result[3] <= 6:
         true_count += 1
-    elif result[2] > 6:
-        logger_isi2p.info(f'{host}:{port} 不是i2p节点，数据包大小测试 1 未通过')
-        return
+    elif result[3] > 6:
+        logger_isi2p.info(f'{host}:{port} 第一次测试失败，数据包大小测试 1 未通过')
+        return False
     
     # 重放中断测试
-    if result[3] == 2:
-        true_count += 1
-    elif result[3] > 2:
-        logger_isi2p.info(f'{host}:{port} 不是i2p节点，重放测试未通过')
-        return
-    
-    # 数据包大小测试2
     if result[4] == 2:
         true_count += 1
     elif result[4] > 2:
-        logger_isi2p.info(f'{host}:{port} 不是i2p节点，数据包测试2未通过')
-        return
+        logger_isi2p.info(f'{host}:{port} 第一次测试失败，重放测试未通过')
+        return False
+    
+    # 数据包大小测试2
+    if result[5] == 2:
+        true_count += 1
+    elif result[5] > 2:
+        logger_isi2p.info(f'{host}:{port} 第一次测试失败，数据包测试2未通过')
+        return False
 
     # 黑名单测试
-    if result[6] == 1:
+    if result[7] == 1:
         true_count += 1
     else:
-        logger_isi2p.info(f'{host}:{port} 不是i2p节点，黑名单测试未通过')
-        return
+        logger_isi2p.info(f'{host}:{port} 第一次测试失败，黑名单测试未通过')
+        return False
     
     # 总结
     if true_count >= correctCountThreshold:
         logger_isi2p.info(f'{host}:{port} 是i2p节点')
+        return True
     else:
-        logger_isi2p.info(f'{host}:{port} 无法确定')
-    return
+        logger_isi2p.info(f'{host}:{port} 第一次测试无法确定')
+        return False
+
+def is_i2p2(result):
+    host = result[0]
+    port = result[1]
+    true_count = 0
+    correctCountThreshold_test2 = int(config['Connection']['correctCountThreshold_test2'])
+    for i in range(2, len(result)):
+        result[i] = int(result[i])
+        if result[i] == -1:
+            logger_isi2p2.info(f'{host}:{port} 无法连接')
+            return True
+        elif result[i] == -2:
+            logger_isi2p2.info(f'{host}:{port} 该结点不是i2p结点')
+            return True
+    # 连接持续时间测试
+    if result[2] >= 5:
+        true_count += 1
+    elif result[2] > 1 and result[2] < 5:
+        logger_isi2p2.info(f'{host}:{port} 该结点不是i2p结点，连接持续性测试未通过')
+        return True
+    
+    if result[3] == 3:
+        true_count += 1
+    else:
+        logger_isi2p2.info(f'{host}:{port} 该结点不是i2p结点，间断处测试不通过')
+        return True
+
+    if result[4] == 1:
+        true_count += 1
+    else:
+        logger_isi2p2.info(f'{host}:{port} 该结点不是i2p结点，间隔时间测试不通过')
+        return True
+
+    if result[5] == 3:
+        true_count += 1
+    else:
+        logger_isi2p2.info(f'{host}:{port} 该结点不是i2p结点，间隔时间测试2不通过')
+        return True
+    
+        # 总结
+    if true_count >= correctCountThreshold_test2:
+        logger_isi2p2.info(f'{host}:{port} 是i2p节点')
+        return True
+    else:
+        logger_isi2p2.info(f'{host}:{port} 第二次测试也无法确定')
+        return True
+    
+
+
+def test(byteNumSinglePacket, host, port):
+    count = 0
+    result = []
+    result.append(host)
+    result.append(str(port))
+    for num in byteNumSinglePacket:
+        if num == 9:
+            time.sleep(22)
+        packet = byteNumSinglePacket[num]
+
+        count = connect(host, port, packet)
+        
+        result.append(str(count))
+        if count == -1 or count == -2:
+            break
+    return result
 
 
 
 def get_result(host, port):
     logger.info("connect " + host + " " + str(port))
-    result = []
-    result.append(host)
-    result.append(str(port))
-    count = 0
+    
     byteNumSinglePacket = packet_generate()
     # elapsed_time = 0
-    for num in byteNumSinglePacket:
-        packet = byteNumSinglePacket[num]
-        for i in range(1, 4):       # 测试3次，防止因网络问题中断，只要有一次没中断就按照没中断的这次来
-            # start_time = 0
-            # if num == 0:
-            #     start_time = time.time()
-            count = connect(host, port, packet)
-            if count == 1:
-                continue
-            elif count == -1 or count == -2:
-                break
-            else:
-                # if num == 0:
-                #     end_time = time.time()
-                #     elapsed_time = end_time - start_time
-                break
-            
-        
-        result.append(str(count))
-        if count == -1 or count == -2:
-            break
+    result = test(byteNumSinglePacket, host, port)
     logger_result.info(":".join(result))
-    is_i2p(result)
+
+    if(is_i2p(result) != True):
+        byteNumSinglePacket = packet2_generate()
+        result = test(byteNumSinglePacket, host, port)
+        logger_result2.info(":".join(result))
+        is_i2p2(result)
+
 
 
 def connect(host, port, packetbyte):
