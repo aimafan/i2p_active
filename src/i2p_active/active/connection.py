@@ -126,7 +126,8 @@ def test(byteNumSinglePacket, host, port):
     result.append(str(port))
     for num in byteNumSinglePacket:
         packet = byteNumSinglePacket[num]
-
+        if num == 9:
+            time.sleep(30)
         count = connect(host, port, packet)
         
         result.append(str(count))

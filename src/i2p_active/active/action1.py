@@ -26,20 +26,15 @@ def write_result():
     while(True):
     # 将字典写入CSV文件
         dic = result_con.consuming_result()
-        if(dic):
-            # 检查文件是否存在
-            file_exists = os.path.isfile(file_name)
+        if(dic != None):
 
             # 写入CSV文件
             with open(file_name, mode='a', newline='') as file:
                 fieldnames = dic.keys()
                 writer = csv.DictWriter(file, fieldnames=fieldnames)
 
-                # 如果文件不存在，则写入标题行
-                if not file_exists:
-                    writer.writeheader()
-
                 writer.writerow(dic)
+        time.sleep(5)
 
 
 # vps1进行第一次测试，也就是java版本测试
@@ -58,6 +53,7 @@ def action_1():
     while(True):
         dic = i2p_note.consuming_i2pnote()
         if(dic == None):
+            time.sleep(5)
             continue
         if(dic['ip'] in address_pool):
             continue
