@@ -43,3 +43,10 @@
 
 
 }
+
+### 具体的想法
+
+1. 由本地的主机，从Mysql中获取i2p结点，然后把对应的ip、port还有发送数据需要的东西放到kafka中进行生产
+2. 然后vps对kafka进行消费，vps1对i2p结点进行有密钥的识别，然后vps4对结点进行无秘钥的探测，最终把结果发回到本地主机中
+
+所以kafka一共三个topic，可以开在腾讯云上，分别是GET_HOST、WITH_REG、WITHOUT_REG

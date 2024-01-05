@@ -2,8 +2,9 @@ import pymysql
 from datetime import datetime, timedelta
 import re
 from utils.getconfig import config
-import csv
 import os
+import csv
+from i2p_rabbitmq.rabbitmq_producer import RabbitMQProducer
 
 class MySQLPusher:
     def __init__(self,
@@ -99,7 +100,7 @@ class MySQLPusher:
         limit = int(config['i2p']['limit'])
 
         query = f"""
-        SELECT ntcp2_ipv4, ntcp2_ipv4_port, public_time, version
+        SELECT ntcp2_ipv4, ntcp2_ipv4_port, public_time, version, ntcp2_identity, ntcp2_static
         FROM i2p
         WHERE ntcp2_ipv4 != ''
         ORDER BY STR_TO_DATE(public_time, '%Y-%m-%d %H:%i:%s') DESC
@@ -108,14 +109,38 @@ class MySQLPusher:
 
         cursor.execute(query)
 
+        data = cursor.fetchall()
+
         with open(file_name, 'w', newline='', encoding='utf-8') as file:
             writer = csv.writer(file)
-            writer.writerow(['ntcp2_ipv4', 'ntcp2_ipv4_port', 'public_time', 'version'])  # 写入头部
-            for row in cursor:
+            writer.writerow(['ntcp2_ipv4', 'ntcp2_ipv4_port', 'public_time', 'version', 'ntcp2_identity', 'ntcp2_static', 'result'])  # 写入头部
+            for row in data:
                 writer.writerow(row)
-        # 关闭连接
+
+
+        # RabbitMQ 生产者
+        producer = RabbitMQProducer(queue_name='i2p_note')
+
+
+        # 遍历并发送每一行数据
+        for row in data:
+            # 将行数据转换为字典（或任何适合的格式）
+            message = {
+                'ntcp2_ipv4': row[0],
+                'ntcp2_ipv4_port': row[1],
+                'public_time': row[2],
+                'version': row[3],
+                'ntcp2_identity': row[4],
+                'ntcp2_static': row[5]
+            }
+            producer.send_message(message)
+
+        # 关闭 RabbitMQ 连接
+        producer.close_connection()
+
         cursor.close()
         connection.close()
+
         return file_name
 
 if __name__ == "__main__":
