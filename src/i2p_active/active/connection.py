@@ -125,8 +125,6 @@ def test(byteNumSinglePacket, host, port):
     result.append(host)
     result.append(str(port))
     for num in byteNumSinglePacket:
-        if num == 9:
-            time.sleep(22)
         packet = byteNumSinglePacket[num]
 
         count = connect(host, port, packet)
@@ -138,19 +136,20 @@ def test(byteNumSinglePacket, host, port):
 
 
 
-def get_result(host, port):
+def start_isi2p_1(host, port):
     logger.info("connect " + host + " " + str(port))
     
     byteNumSinglePacket = packet_generate()
     # elapsed_time = 0
     result = test(byteNumSinglePacket, host, port)
     logger_result.info(":".join(result))
+    return is_i2p(result)
 
-    if(is_i2p(result) != True):
-        byteNumSinglePacket = packet2_generate()
-        result = test(byteNumSinglePacket, host, port)
-        logger_result2.info(":".join(result))
-        is_i2p2(result)
+def start_isi2p_2(host, port):
+    byteNumSinglePacket = packet2_generate()
+    result = test(byteNumSinglePacket, host, port)
+    logger_result2.info(":".join(result))
+    return is_i2p2(result)
 
 
 
