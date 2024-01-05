@@ -23,21 +23,23 @@ def write_result():
     file_name = os.path.join(*os.path.dirname(os.path.abspath(__file__)).split("/")[:-3])
     file_name = os.path.join("/" + file_name, "data", f"output.csv")
     result_con = RabbitMQConsumer("result")      # 返回一个字典如 {'ip': '12.12.34.64', 'port': '7896', 'result': '1'}
+    while(True):
     # 将字典写入CSV文件
-    dic = result_con.consuming_result()
-    # 检查文件是否存在
-    file_exists = os.path.isfile(file_name)
+        dic = result_con.consuming_result()
+        if(dic):
+            # 检查文件是否存在
+            file_exists = os.path.isfile(file_name)
 
-    # 写入CSV文件
-    with open(file_name, mode='a', newline='') as file:
-        fieldnames = dic.keys()
-        writer = csv.DictWriter(file, fieldnames=fieldnames)
+            # 写入CSV文件
+            with open(file_name, mode='a', newline='') as file:
+                fieldnames = dic.keys()
+                writer = csv.DictWriter(file, fieldnames=fieldnames)
 
-        # 如果文件不存在，则写入标题行
-        if not file_exists:
-            writer.writeheader()
+                # 如果文件不存在，则写入标题行
+                if not file_exists:
+                    writer.writeheader()
 
-        writer.writerow(dic)
+                writer.writerow(dic)
 
 
 # vps1进行第一次测试，也就是java版本测试
@@ -66,27 +68,8 @@ def action_1():
             result_message = {"ip": dic['ip'], "port": dic['port'], "result": "1"}
             result_pro.send_result(result_message)
         else:
+
             i2p_note_with2.send_result(dic)
-
-
-# vps2进行第二次测试，也就是C++版本测试
-# 第二次测试通过，将结果写入result队列，测试不通过，同样将结果写入result队列
-def action_2():
-
-    # 从vps3中读取ip和port
-    i2p_note = RabbitMQConsumer("i2p_note_with2", True, {'x-message-ttl': 300000})
-    result_pro = RabbitMQProducer("result")
-
-    while(True):
-        dic = i2p_note.consuming_i2pnote()
-        result2 = start_isi2p_2(dic['ip'], int(dic['port']))
-        if(result2):
-            result_message = {"ip": dic['ip'], "port": dic['port'], "result": "2"}
-            result_pro.send_result(result_message)
-        else:
-            result_message = {"ip": dic['ip'], "port": dic['port'], "result": "0"}
-            result_pro.send_result(result_message)
-
 
 if __name__=='__main__':
     action_1()

@@ -18,15 +18,20 @@ class RabbitMQProducer:
 
     def send_result(self, mydic):
         message = json.dumps(mydic)
-        self.channel.basic_publish(exchange='',
+        try:
+            self.channel.basic_publish(exchange='',
                                    routing_key=self.queue_name,
                                    body=message)
+        except:
+            logger.error("生产result失败，可能因为断连的缘故")
+            return
+        print(mydic)
         logger.info(f" [x] Sent '{message}' to queue '{self.queue_name}'")
 
     def close_connection(self):
         self.connection.close()
 
 if __name__ == "__main__":
-    mq = RabbitMQProducer("result")
+    i2p_note_with2 = RabbitMQProducer("i2p_note_with2", True, {'x-message-ttl': 60000})
     mydic = {"ip": "12.12.34.64", "port": "7896", "result": "1"}
-    mq.send_result(mydic)
+    i2p_note_with2.send_result(mydic)

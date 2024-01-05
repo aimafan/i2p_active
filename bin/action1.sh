@@ -11,6 +11,6 @@ script_dir=$(dirname "$script_path")
 
 cd $script_dir/../src/i2p_active
 
-python3 -m active.i2p
+python3 -m active.action1
 
 cd -

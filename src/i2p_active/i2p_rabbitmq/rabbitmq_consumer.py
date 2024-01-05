@@ -19,7 +19,11 @@ class RabbitMQConsumer:
         self.channel.queue_declare(queue=queue_name, durable=durable, arguments=arguments)
 
     def consuming_i2pnote(self):
-        method_frame, header_frame, body = self.channel.basic_get(queue=self.queue_name, auto_ack=True)
+        try:
+            method_frame, header_frame, body = self.channel.basic_get(queue=self.queue_name, auto_ack=True)
+        except:
+            logger.error("消费i2pnote失败")
+            return
         # 将字节字符串解码为普通字符串
         if(body):
             decoded_data = body.decode()
