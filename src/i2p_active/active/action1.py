@@ -4,7 +4,6 @@ import socket
 import os
 import threading
 import secrets
-import csv
 from utils import getconfig, getlog
 from .connection import start_isi2p_1, start_isi2p_2
 # from mysql_handle.mysql import MySQLPusher
@@ -27,13 +26,12 @@ def write_result():
     # 将字典写入CSV文件
         dic = result_con.consuming_result()
         if(dic != None):
-
             # 写入CSV文件
             with open(file_name, mode='a', newline='') as file:
                 fieldnames = dic.keys()
                 writer = csv.DictWriter(file, fieldnames=fieldnames)
-
                 writer.writerow(dic)
+
         time.sleep(5)
 
 
@@ -64,8 +62,8 @@ def action_1():
             result_message = {"ip": dic['ip'], "port": dic['port'], "result": "1"}
             result_pro.send_result(result_message)
         else:
-
             i2p_note_with2.send_result(dic)
+        
 
 if __name__=='__main__':
     action_1()
