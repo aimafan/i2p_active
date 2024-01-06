@@ -5,13 +5,13 @@ import re
 import time
 
 config = getconfig.config
-logger = getlog.setup_logging("rabbitmq")
+logger = getlog.setup_logging("rabbitmq_con.log")
 
 host = config['rabbitmq']['host']
 port = int(config['rabbitmq']['port'])
 
 class RabbitMQConsumer:
-    def __init__(self, queue_name, durable=False, arguments=None, host='localhost', port=5672):
+    def __init__(self, queue_name, durable=False, arguments=None, host=host, port=port):
         self.queue_name = queue_name
         self.host = host
         self.port = port
