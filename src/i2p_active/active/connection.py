@@ -88,33 +88,29 @@ def is_i2p2(result):
     if result[2] >= 5:
         true_count += 1
     elif result[2] > 1 and result[2] < 5:
-        logger_isi2p2.info(f'{host}:{port} 该结点不是i2p结点，连接持续性测试未通过')
-        return False
+        logger_isi2p2.info(f'{host}:{port} 连接持续性测试未通过')
     
     if result[3] == 3:
         true_count += 1
     else:
-        logger_isi2p2.info(f'{host}:{port} 该结点不是i2p结点，间断处测试不通过')
-        return False
+        logger_isi2p2.info(f'{host}:{port} 间断处测试不通过')
 
     if result[4] == 1:
         true_count += 1
     else:
-        logger_isi2p2.info(f'{host}:{port} 该结点不是i2p结点，间隔时间测试不通过')
-        return False
+        logger_isi2p2.info(f'{host}:{port} 间隔时间测试不通过')
 
     if result[5] == 3:
         true_count += 1
     else:
-        logger_isi2p2.info(f'{host}:{port} 该结点不是i2p结点，间隔时间测试2不通过')
-        return False
+        logger_isi2p2.info(f'{host}:{port} 间隔时间测试2不通过')
     
         # 总结
     if true_count >= correctCountThreshold_test2:
         logger_isi2p2.info(f'{host}:{port} 是i2p节点')
         return True
     else:
-        logger_isi2p2.info(f'{host}:{port} 第二次测试也无法确定')
+        logger_isi2p2.info(f'{host}:{port} 该结点不是i2p结点')
         return False
     
 
