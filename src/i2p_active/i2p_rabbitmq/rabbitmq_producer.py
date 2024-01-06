@@ -12,13 +12,17 @@ port = int(config['rabbitmq']['port'])
 class RabbitMQProducer:
     def __init__(self, queue_name, durable=False, arguments=None, host=host, port=port):
         self.queue_name = queue_name
-        self.connect(durable, arguments, host, port)
+        self.durable = durable
+        self.arguments = arguments
+        self.host = host
+        self.port = port
+        self.connect()
         
 
-    def connect(self, durable, arguments, host, port):
-        self.connection = pika.BlockingConnection(pika.ConnectionParameters(host, port))
+    def connect(self):
+        self.connection = pika.BlockingConnection(pika.ConnectionParameters(self.host, self.port))
         self.channel = self.connection.channel()
-        self.channel.queue_declare(queue=self.queue_name, durable=durable, arguments=arguments)
+        self.channel.queue_declare(queue=self.queue_name, durable=self.durable, arguments=self.arguments)
 
     def send_result(self, mydic):
         message = json.dumps(mydic)
