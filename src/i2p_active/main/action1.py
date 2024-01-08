@@ -5,7 +5,7 @@ import os
 import threading
 import secrets
 from utils import getconfig, getlog
-from .connection import start_isi2p_1, start_isi2p_2
+from active.connection import start_isi2p_1, start_isi2p_2
 # from mysql_handle.mysql import MySQLPusher
 import csv
 from i2p_rabbitmq.rabbitmq_consumer import RabbitMQConsumer
