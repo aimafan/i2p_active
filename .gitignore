@@ -4,4 +4,3 @@ logs/*
 !logs/.gitkeep
 test
 .vscode
-data/output.csv

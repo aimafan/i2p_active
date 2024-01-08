@@ -35,6 +35,9 @@ class RabbitMQProducer:
                 pika.exceptions.AMQPConnectionError) as e:
             logger.error(f"生产result失败，尝试重连。错误详情: {e}")
             self.reconnect()
+            self.channel.basic_publish(exchange='',
+                                       routing_key=self.queue_name,
+                                       body=message)
             return
         except Exception as e:
             logger.error(f"生产result失败，错误详情: {e}")
