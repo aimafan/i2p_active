@@ -26,7 +26,7 @@ def action_2_2():
     result_pro = RabbitMQProducer("result")
 
     while(True):
-        dic = i2p_note_with2.consuming_i2pnote()
+        dic = i2p_note_with2.consuming_result()
         if(dic == None):
             time.sleep(5)
             continue

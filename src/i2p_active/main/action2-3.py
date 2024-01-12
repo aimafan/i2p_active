@@ -22,7 +22,7 @@ def action_2_3():
     result_pro = RabbitMQProducer("result")
 
     while(True):
-        dic = i2p_note_with3.consuming_i2pnote()
+        dic = i2p_note_with3.consuming_result()
         if(dic == None):
             time.sleep(5)
             continue
