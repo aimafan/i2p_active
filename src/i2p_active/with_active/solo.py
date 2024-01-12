@@ -12,7 +12,6 @@ import base64
 
 config = getconfig.config
 
-
 sole_host = config['solo']['host']
 sole_port = int(config['solo']['port'])
 
@@ -45,4 +44,4 @@ if __name__=='__main__':
     m_RemoteIdentHash, m_IV, m_remoteStaticKey = base64replace(m_RemoteIdentHash, m_IV, m_remoteStaticKey)
 
     isi2p = start_isi2p([host, port], m_RemoteIdentHash, m_IV, m_remoteStaticKey)
-    
+    print(isi2p)

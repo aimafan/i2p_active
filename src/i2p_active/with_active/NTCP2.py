@@ -11,8 +11,6 @@ import hmac
 import struct
 from cryptography.hazmat.primitives.ciphers.aead import ChaCha20Poly1305
 from .connection import logger
-from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
-from cryptography.hazmat.backends import default_backend
 
 
 class NTCP2Establisher():
@@ -82,19 +80,20 @@ class NTCP2Establisher():
     def SessionConfirmed(self, data):
         if len(data) >= 64 and len(data) <= 287:
             # 假设的加密数据、密钥和 IV（您需要用实际的数据替换这些）
-            encrypted_y = data[:32]
-            key_rh_b = self.m_RemoteIdentHash     # Bob的Hash
-            iv = self.m_IV        # IV应该是AES块大小，即16字节
-            cipher = Cipher(algorithms.AES(key_rh_b), modes.CBC(iv), backend=default_backend())
-            decryptor = cipher.decryptor()
-
+            self.KDF2Alice()
+            encrypted_data = data[32:64]
+            key = self.k
+            chacha = ChaCha20Poly1305(key)
+            nonce = b"\x00" * 12  # nonce的长度应该是12字节
+            associated_data = self.h
             # 解密数据
-            decrypted_y = decryptor.update(encrypted_y) + decryptor.finalize()
-            print(decrypted_y)
-            print(len(decrypted_y))
-            if decrypted_y == self.my_key.get_public_byte():
+            try:
+                # 如果有附加数据，将其作为第二个参数传递
+                decrypted_data = chacha.decrypt(nonce, encrypted_data, associated_data)
+                print("解密后的数据:", decrypted_data)
                 return True
-            else:
+            except Exception as e:
+                print(f"解密错误: {e}")
                 return False
 
         else:
@@ -136,13 +135,13 @@ class NTCP2Establisher():
         bob_public_key = x25519.X25519PublicKey.from_public_bytes(self.m_remoteStaticKey)  # Bob's public key object of X25519
 
         # Define input_key_material = 32 byte DH result of Alice's ephemeral key and Bob's static key
-        input_key_material = self.my_key.get_private().exchange(bob_public_key)
+        self.input_key_material = self.my_key.get_private().exchange(bob_public_key)
 
         # MixKey(DH())
         def hmac_sha256(key, data):
             return hmac.new(key, data, hashlib.sha256).digest()
 
-        temp_key = hmac_sha256(self.ck, input_key_material)
+        temp_key = hmac_sha256(self.ck, self.input_key_material)
 
         # Output 1
         self.ck = hmac_sha256(temp_key, b'\x01')
@@ -152,6 +151,19 @@ class NTCP2Establisher():
         self.k = hmac_sha256(temp_key, self.ck + b'\x02')
 
         # End of "es" message pattern
+
+    def KDF2Alice(self):
+        self.h = hashlib.sha256(self.h + self.m_SessionRequestBuffer[:32]).digest()
+        self.h = hashlib.sha256(self.h + self.m_SessionRequestBuffer[64:]).digest()
+        self.h = hashlib.sha256(self.h + self.m_remoteStaticKey).digest()
+
+        temp_key = hmac.new(self.ck, self.input_key_material, hashlib.sha256).digest()
+        # 设置新的链接密钥
+        ck = hmac.new(temp_key, b"\x01", hashlib.sha256).digest()
+
+        # 生成加密密钥 k
+        self.k = hmac.new(temp_key, ck + b"\x02", hashlib.sha256).digest()
+
 
 class my_X25519():
     def __init__(self):
