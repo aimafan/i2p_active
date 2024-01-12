@@ -10,6 +10,9 @@ import hashlib
 import hmac
 import struct
 from cryptography.hazmat.primitives.ciphers.aead import ChaCha20Poly1305
+from .connection import logger
+from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
+from cryptography.hazmat.backends import default_backend
 
 
 class NTCP2Establisher():
@@ -74,7 +77,30 @@ class NTCP2Establisher():
 
         self.m_SessionRequestBuffer[32:64] = encrypted_msg
 
+    # 用来验证SessionCreated是否符合NTCP2，从而判断Bob是否是i2p结点
+    # data为sessioncreated
+    def SessionConfirmed(self, data):
+        if len(data) >= 64 and len(data) <= 287:
+            # 假设的加密数据、密钥和 IV（您需要用实际的数据替换这些）
+            encrypted_y = data
+            key_rh_b = self.m_RemoteIdentHash     # Bob的Hash
+            iv = self.m_IV        # IV应该是AES块大小，即16字节
+            cipher = Cipher(algorithms.AES(key_rh_b), modes.CBC(iv), backend=default_backend())
+            decryptor = cipher.decryptor()
 
+            # 解密数据
+            decrypted_y = decryptor.update(encrypted_y) + decryptor.finalize()
+            print(decrypted_y)
+            print(len(decrypted_y))
+            if decrypted_y == self.my_key.get_public_byte():
+                return True
+            else:
+                return False
+
+        else:
+            logger.error("data的长度与SessionCreated不符")
+            return False
+        
 
     def KDF1Alice(self):
         # Define protocol_name

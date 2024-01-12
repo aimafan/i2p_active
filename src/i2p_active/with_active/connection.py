@@ -19,7 +19,7 @@ def connect(host, port, packetbyte):
     """
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as client_socket:
         # 尝试连接到目标主机和端口
-        client_socket.settimeout(2)
+        client_socket.settimeout(5)
         try:
             client_socket.connect((host, port))
             logger.info(host + " " + str(port) + " " + "connect success!")
@@ -41,6 +41,7 @@ def connect(host, port, packetbyte):
             else:
                 #能够接收到数据，不符合obfs4，obfs4应该接收不到数据
                 logger.info(f'接收到返回消息:{data}')
+                return data
         except socket.timeout:
         #正常收不到数据，超时2秒
             logger.debug(host + " " + str(port) + " " + "收不到数据")
@@ -48,4 +49,4 @@ def connect(host, port, packetbyte):
         except Exception as e:
         #接收连接出错，对方连接关闭？
             logger.info(host + " " + str(port) + " " + f'read出错:{e}')
-            
+        return 0

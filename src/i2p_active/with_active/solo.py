@@ -24,7 +24,11 @@ def start_isi2p(ip_port, m_RemoteIdentHash, m_IV, m_remoteStaticKey):
     ntcp2.CreateSessionRequestMessage()
     logger.info(f"Router Hash: {m_RemoteIdentHash}, IV: {m_IV}, remote static key: {m_remoteStaticKey}")
     logger.info(f"SessionRequestMessage: {ntcp2.m_SessionRequestBuffer}")
-    connect(host, port, ntcp2.m_SessionRequestBuffer)
+    data = connect(host, port, ntcp2.m_SessionRequestBuffer)
+    if data != 0:
+        return ntcp2.SessionConfirmed(data)
+    else:
+        return False
 
 def base64replace(m_RemoteIdentHash, m_IV, m_remoteStaticKey):
     return base64.urlsafe_b64decode(m_RemoteIdentHash.replace('-', '+').replace('~', '/')), base64.urlsafe_b64decode(m_IV.replace('-', '+').replace('~', '/')), base64.urlsafe_b64decode(m_remoteStaticKey.replace('-', '+').replace('~', '/'))
@@ -39,5 +43,6 @@ if __name__=='__main__':
     m_IV = 'uJJeAqdpwYWJ6tQBsFz6UQ=='
     m_remoteStaticKey = 'Pzu~0bCeFK7EhOB4tehUISEuzBYSC6XtEi7lFVdh-g8='
     m_RemoteIdentHash, m_IV, m_remoteStaticKey = base64replace(m_RemoteIdentHash, m_IV, m_remoteStaticKey)
-    start_isi2p([host, port], m_RemoteIdentHash, m_IV, m_remoteStaticKey)
+
+    isi2p = start_isi2p([host, port], m_RemoteIdentHash, m_IV, m_remoteStaticKey)
     
