@@ -38,11 +38,11 @@ class RabbitMQProducer:
             self.channel.basic_publish(exchange='',
                                        routing_key=self.queue_name,
                                        body=message)
+            logger.info(f" [x] Sent '{message}' to queue '{self.queue_name}'")
             return
         except Exception as e:
             logger.error(f"生产result失败，错误详情: {e}")
             return
-        logger.info(f" [x] Sent '{message}' to queue '{self.queue_name}'")
 
     def reconnect(self):
         if self.connection and not self.connection.is_closed:
