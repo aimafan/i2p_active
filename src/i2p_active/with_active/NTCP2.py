@@ -82,7 +82,7 @@ class NTCP2Establisher():
     def SessionConfirmed(self, data):
         if len(data) >= 64 and len(data) <= 287:
             # 假设的加密数据、密钥和 IV（您需要用实际的数据替换这些）
-            encrypted_y = data
+            encrypted_y = data[:32]
             key_rh_b = self.m_RemoteIdentHash     # Bob的Hash
             iv = self.m_IV        # IV应该是AES块大小，即16字节
             cipher = Cipher(algorithms.AES(key_rh_b), modes.CBC(iv), backend=default_backend())
