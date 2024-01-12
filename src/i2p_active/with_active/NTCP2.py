@@ -153,7 +153,7 @@ class NTCP2Establisher():
         # End of "es" message pattern
 
     def KDF2Alice(self):
-        self.h = hashlib.sha256(self.h + self.m_SessionRequestBuffer[:32]).digest()
+        self.h = hashlib.sha256(self.h + self.m_SessionRequestBuffer[32:64]).digest()
         self.h = hashlib.sha256(self.h + self.m_SessionRequestBuffer[64:]).digest()
         self.h = hashlib.sha256(self.h + self.m_remoteStaticKey).digest()
 
