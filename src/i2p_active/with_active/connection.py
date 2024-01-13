@@ -25,7 +25,7 @@ def connect(host, port, packetbyte):
             logger.info(host + " " + str(port) + " " + "connect success!")
         except Exception as e:
             logger.warn(host + " " + str(port) + " " + f"connect error! {e}")
-            return -1
+            return 0
         # 构造要发送的数据包
         try:
             client_socket.settimeout(2) # 发送数据包之后等的时间

@@ -10,7 +10,11 @@ import hashlib
 import hmac
 import struct
 from cryptography.hazmat.primitives.ciphers.aead import ChaCha20Poly1305
+from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
+from cryptography.hazmat.backends import default_backend
 from .connection import logger
+from cryptography.hazmat.backends import default_backend
+
 
 
 class NTCP2Establisher():
@@ -38,12 +42,12 @@ class NTCP2Establisher():
         m_SessionRequestBufferLen = paddingLength + 64      # 会话请求缓冲区的长度
         self.m_SessionRequestBuffer = bytearray(m_SessionRequestBufferLen)
         self.m_SessionRequestBuffer[64: 64+paddingLength] = get_random_bytes(paddingLength) # 会话请求的缓冲区
-
         # 加密X
         # AES-256-CBC 加密
         encryption = AES.new(self.m_RemoteIdentHash, AES.MODE_CBC, self.m_IV)
         self.m_SessionRequestBuffer[:32] = encryption.encrypt(self.my_key.get_public_byte())  # 加密Alice的公钥
 
+        logger.info(f"_x = {self.my_key.get_public_byte()}")
         self.KDF1Alice()
 
         options = bytearray(16)
@@ -52,7 +56,7 @@ class NTCP2Establisher():
         options[2:4] = paddingLength.to_bytes(2, 'big')  # padLen
 
         # m3p2Len，这部分等会再写
-        buf_len = 64  
+        buf_len = 500  
         self.m3p2Len = buf_len + 4 + 16
         options[4:6] = self.m3p2Len.to_bytes(2, 'big')
 
@@ -73,18 +77,18 @@ class NTCP2Establisher():
         # 加密
         encrypted_msg = chacha.encrypt(nonce, msg, ad)
 
+        logger.info(f"options = {msg}")
         self.m_SessionRequestBuffer[32:64] = encrypted_msg
 
     # 用来验证SessionCreated是否符合NTCP2，从而判断Bob是否是i2p结点
     # data为sessioncreated
     def SessionConfirmed(self, data):
-        if len(data) >= 64 and len(data) <= 287:
             # 假设的加密数据、密钥和 IV（您需要用实际的数据替换这些）
             self.KDF2Alice()
             encrypted_data = data[32:64]
             key = self.k
             chacha = ChaCha20Poly1305(key)
-            nonce = b"\x00" * 12  # nonce的长度应该是12字节
+            nonce = bytearray(12)
             associated_data = self.h
             # 解密数据
             try:
@@ -95,11 +99,33 @@ class NTCP2Establisher():
             except Exception as e:
                 print(f"解密错误: {e}")
                 return False
+        
+    def SessionConfirmed_key(self, data):
+        if len(data) >= 64 and len(data) <= 287:
+            # 假设的加密数据、密钥和 IV（您需要用实际的数据替换这些）
+            encrypted_data = data[:32]
+            key_rh_b = self.m_RemoteIdentHash
+            iv = self.m_SessionRequestBuffer[16:32]
+            cipher = Cipher(algorithms.AES(key_rh_b), modes.CBC(iv), backend=default_backend())
+            
+            decryptor = cipher.decryptor()
+
+            # 解密数据
+            self.y = decryptor.update(encrypted_data) + decryptor.finalize()
+            logger.info(f"self.y = {self.y}")
+            try:
+                self.bob_public_key = x25519.X25519PublicKey.from_public_bytes(self.y)
+                print("公钥有效")
+            except ValueError:
+                print("公钥无效")
+                return False
+            
+        # 看看option的确定，这里的这个公钥确定只能到这里了
+            return self.SessionConfirmed(data)
 
         else:
             logger.error("data的长度与SessionCreated不符")
             return False
-        
 
     def KDF1Alice(self):
         # Define protocol_name
@@ -155,14 +181,20 @@ class NTCP2Establisher():
     def KDF2Alice(self):
         self.h = hashlib.sha256(self.h + self.m_SessionRequestBuffer[32:64]).digest()
         self.h = hashlib.sha256(self.h + self.m_SessionRequestBuffer[64:]).digest()
-        self.h = hashlib.sha256(self.h + self.m_remoteStaticKey).digest()
+        self.h = hashlib.sha256(self.h + self.y).digest()
 
-        temp_key = hmac.new(self.ck, self.input_key_material, hashlib.sha256).digest()
+        def hmac_sha256(key, data):
+            return hmac.new(key, data, hashlib.sha256).digest()
+        
+        shared_key_material = self.my_key.private_key.exchange(self.bob_public_key)
+        
+        temp_key = hmac_sha256(self.ck, shared_key_material)
         # 设置新的链接密钥
-        ck = hmac.new(temp_key, b"\x01", hashlib.sha256).digest()
+        self.ck = hmac_sha256(temp_key, b"\x01")
 
         # 生成加密密钥 k
-        self.k = hmac.new(temp_key, ck + b"\x02", hashlib.sha256).digest()
+        self.k = hmac_sha256(temp_key, self.ck + b"\x02")
+
 
 
 class my_X25519():
