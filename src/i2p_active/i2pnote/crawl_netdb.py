@@ -20,11 +20,12 @@ def is_ip(address):
 
 
 
-
+## 这部分爬虫代码有问题
 def get_transport(tr_list):
     transport = {}
     NTCP_count = 0
     SSU_count = 0
+
     for transport_data in tr_list[4].find_all("td")[1].find_all("b"):
         transport_type = transport_data.get_text(strip=True).rstrip(':')
         
@@ -38,18 +39,26 @@ def get_transport(tr_list):
         else:
             unique_transport_type = f"{transport_type}"
 
-        span_siblings = transport_data.find_next_siblings('span', class_='nowrap')
+        span_siblings = transport_data.find_next_siblings()
 
         transport_data = {}
-        for span in span_siblings:
-            name_tag = span.find('span', class_='netdb_name')
-            info_tag = span.find('span', class_='netdb_info')
 
-            if name_tag and info_tag:
-                name = name_tag.get_text(strip=True).rstrip(':')
-                info = info_tag.get_text(strip=True)
-                transport_data[name] = info
+        for sibling in span_siblings:
+        # 检查是否遇到了新的 <b class='netdb_transport'>
+            if sibling.name == 'b' and 'netdb_transport' in sibling.get('class', []):
+                break
 
+            # 只处理 class 为 'nowrap' 的 span 元素
+            if sibling.name == 'span' and 'nowrap' in sibling.get('class', []):
+                name_tag = sibling.find('span', class_='netdb_name')
+                info_tag = sibling.find('span', class_='netdb_info')
+
+                if name_tag and info_tag:
+                    name = name_tag.get_text(strip=True).rstrip(':')
+                    info = info_tag.get_text(strip=True)
+                    
+                    transport_data[name] = info
+   
         # 添加独特的传输类型键和对应的数据
         transport[unique_transport_type] = transport_data
     return transport, NTCP_count, SSU_count
@@ -151,6 +160,10 @@ def run_crawl(url):
     return parse_html(response.text)
 
 if __name__ == "__main__":
-    url = 'http://127.0.0.1:7657/netdb?pg=3&ps=500&v=0.9.60'  # 替换为你要爬取的页面的URL
+    url = 'http://127.0.0.1:7657/netdb?pg=1&ps=1&v=0.9.60'  # 替换为你要爬取的页面的URL
     netdb = run_crawl(url)
+    print(netdb)
+
+
+
 

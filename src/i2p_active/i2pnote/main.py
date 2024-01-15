@@ -34,7 +34,7 @@ def run():
 
     urls = get_url()
     # TODO：加多线程爬虫
-    max_threads = int(config['crawl']['threads_num'])  # 最多开7个线程
+    max_threads = int(config['crawl']['threads_num'])  # 最多开1个线程
     semaphore = threading.Semaphore(max_threads)
     threads = []
 

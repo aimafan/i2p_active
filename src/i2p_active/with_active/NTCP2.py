@@ -47,7 +47,6 @@ class NTCP2Establisher():
         encryption = AES.new(self.m_RemoteIdentHash, AES.MODE_CBC, self.m_IV)
         self.m_SessionRequestBuffer[:32] = encryption.encrypt(self.my_key.get_public_byte())  # 加密Alice的公钥
 
-        logger.info(f"_x = {self.my_key.get_public_byte()}")
         self.KDF1Alice()
 
         options = bytearray(16)
@@ -77,7 +76,6 @@ class NTCP2Establisher():
         # 加密
         encrypted_msg = chacha.encrypt(nonce, msg, ad)
 
-        logger.info(f"options = {msg}")
         self.m_SessionRequestBuffer[32:64] = encrypted_msg
 
     # 用来验证SessionCreated是否符合NTCP2，从而判断Bob是否是i2p结点
@@ -94,11 +92,11 @@ class NTCP2Establisher():
             try:
                 # 如果有附加数据，将其作为第二个参数传递
                 decrypted_data = chacha.decrypt(nonce, encrypted_data, associated_data)
-                print("解密后的数据:", decrypted_data)
-                return True
+                logger.info(f"解密后的数据: {decrypted_data}")
+                return 100
             except Exception as e:
-                print(f"解密错误: {e}")
-                return False
+                logger.warn(f"解密错误")
+                return 301
         
     def SessionConfirmed_key(self, data):
         if len(data) >= 64 and len(data) <= 287:
@@ -112,20 +110,18 @@ class NTCP2Establisher():
 
             # 解密数据
             self.y = decryptor.update(encrypted_data) + decryptor.finalize()
-            logger.info(f"self.y = {self.y}")
             try:
                 self.bob_public_key = x25519.X25519PublicKey.from_public_bytes(self.y)
-                print("公钥有效")
             except ValueError:
-                print("公钥无效")
-                return False
+                logger.warn("公钥验证失败")
+                return 202
             
         # 看看option的确定，这里的这个公钥确定只能到这里了
             return self.SessionConfirmed(data)
 
         else:
-            logger.error("data的长度与SessionCreated不符")
-            return False
+            logger.warn("data的长度与SessionCreated不符")
+            return 203
 
     def KDF1Alice(self):
         # Define protocol_name
