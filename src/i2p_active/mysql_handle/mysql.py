@@ -10,25 +10,27 @@ import time
 
 logger = setup_logging("mysql.log")
 
+
 class MySQLPusher:
-    def __init__(self,
-                host=config['mysql']['host'],
-                port=int(config['mysql']['port']),
-                user=config['mysql']['user'],
-                password=config['mysql']['password'],
-                database=config['mysql']['database']
-                ):
+    def __init__(
+        self,
+        host=config["mysql"]["host"],
+        port=int(config["mysql"]["port"]),
+        user=config["mysql"]["user"],
+        password=config["mysql"]["password"],
+        database=config["mysql"]["database"],
+    ):
         self.mysql_config = {
             "host": host,
             "port": port,
             "user": user,
             "password": password,
-            "database": database
+            "database": database,
         }
 
     def handle_public_time(self, delta_time):
         now = datetime.now()
-        delta_time = re.sub(r'\s+', '', delta_time, flags=re.UNICODE)
+        delta_time = re.sub(r"\s+", "", delta_time, flags=re.UNICODE)
         if "分" in delta_time:
             num = int(delta_time.split("分")[0])
         else:
@@ -36,14 +38,15 @@ class MySQLPusher:
         return (now - timedelta(minutes=num)).strftime("%Y-%m-%d %H:%M:%S")
 
     def push_mysql(self, netdb):
-        '''
+        """
         将爬虫的结果push到mysql中
-        '''
+        """
         connection = pymysql.connect(**self.mysql_config)
         cursor = connection.cursor()
 
         # 检查表是否存在，如果不存在则创建
-        cursor.execute("""
+        cursor.execute(
+            """
             CREATE TABLE IF NOT EXISTS i2p (
                 id VARCHAR(255) PRIMARY KEY,
                 hash VARCHAR(255),
@@ -61,7 +64,8 @@ class MySQLPusher:
                 ssu_port6 INT,
                 country VARCHAR(255)
             )
-        """)
+        """
+        )
 
         # 插入数据的SQL语句
         sql = """
@@ -72,12 +76,24 @@ class MySQLPusher:
         """
 
         for item in netdb:
-            public_time = self.handle_public_time(item['public_time'])
+            public_time = self.handle_public_time(item["public_time"])
 
             data = (
-                item['id'], item['hash'], datetime.now(), public_time, item['version'], item['isfloodfill'],
-                item['ntcp2_ipv4'], item['ntcp2_ipv4_port'], item['ntcp2_ipv6'], item['ntcp2_ipv6_port'],
-                item['ntcp2_identity'], item['ntcp2_static'], item['ssu_port4'], 0, item['country']
+                item["id"],
+                item["hash"],
+                datetime.now(),
+                public_time,
+                item["version"],
+                item["isfloodfill"],
+                item["ntcp2_ipv4"],
+                item["ntcp2_ipv4_port"],
+                item["ntcp2_ipv6"],
+                item["ntcp2_ipv6_port"],
+                item["ntcp2_identity"],
+                item["ntcp2_static"],
+                item["ssu_port4"],
+                0,
+                item["country"],
             )
 
             cursor.execute(sql, data)
@@ -87,21 +103,25 @@ class MySQLPusher:
         connection.close()
 
     def get_i2pnote(self):
-        ipv4_file_name = os.path.join(*os.path.dirname(os.path.abspath(__file__)).split("/")[:-3])
+        ipv4_file_name = os.path.join(
+            *os.path.dirname(os.path.abspath(__file__)).split("/")[:-3]
+        )
         ipv4_file_name = os.path.join("/" + ipv4_file_name, "data", "ipv4.txt")
+
         # 将ntcp2_ipv4地址写入文件
         def write_ipv4_to_file(file_path, ipv4):
-            with open(file_path, 'a') as file:
-                file.write(ipv4 + '\n')
+            with open(file_path, "a") as file:
+                file.write(ipv4 + "\n")
+
         # 从文件中读取已有的ntcp2_ipv4地址
         def read_ipv4_list(file_path):
             if os.path.exists(file_path):
-                with open(file_path, 'r') as file:
+                with open(file_path, "r") as file:
                     return [line.split()[0] for line in file if line.strip()]
             return []
-        
+
         existing_ipv4s = read_ipv4_list(ipv4_file_name)
-        while(True):
+        while True:
             connection = pymysql.connect(**self.mysql_config)
             with connection.cursor() as cursor:
                 flag = 0
@@ -128,7 +148,9 @@ class MySQLPusher:
                     logger.warn(f"没有获得查询结果")
                     continue
                 if result[1] not in existing_ipv4s:
-                    write_ipv4_to_file(ipv4_file_name, result[1] + " " + str(result[-1]))
+                    write_ipv4_to_file(
+                        ipv4_file_name, result[1] + " " + str(result[-1])
+                    )
                     flag = 1
                     break
                 else:
@@ -141,6 +163,7 @@ class MySQLPusher:
                 logger.warn(f"等待数据库更新......")
                 time.sleep(10)
         return result
+
 
 if __name__ == "__main__":
     pusher = MySQLPusher("10.112.58.202", 7658, "root", "darknet@iie", "darknet")

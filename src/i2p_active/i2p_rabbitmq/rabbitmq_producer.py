@@ -3,11 +3,13 @@ import json
 from utils import getconfig, getlog
 
 import pika
+
 config = getconfig.config
 logger = getlog.setup_logging("rabbitmq_pro.log")
 
-host = config['rabbitmq']['host']
-port = int(config['rabbitmq']['port'])
+host = config["rabbitmq"]["host"]
+port = int(config["rabbitmq"]["port"])
+
 
 class RabbitMQProducer:
     def __init__(self, queue_name, durable=False, arguments=None, host=host, port=port):
@@ -17,27 +19,32 @@ class RabbitMQProducer:
         self.host = host
         self.port = port
         self.connect()
-        
 
     def connect(self):
-        self.connection = pika.BlockingConnection(pika.ConnectionParameters(self.host, self.port))
+        self.connection = pika.BlockingConnection(
+            pika.ConnectionParameters(self.host, self.port)
+        )
         self.channel = self.connection.channel()
-        self.channel.queue_declare(queue=self.queue_name, durable=self.durable, arguments=self.arguments)
+        self.channel.queue_declare(
+            queue=self.queue_name, durable=self.durable, arguments=self.arguments
+        )
 
     def send_result(self, mydic):
         message = json.dumps(mydic)
         try:
-            self.channel.basic_publish(exchange='',
-                                       routing_key=self.queue_name,
-                                       body=message)
-        except (pika.exceptions.ConnectionClosedByBroker, 
-                pika.exceptions.AMQPChannelError, 
-                pika.exceptions.AMQPConnectionError) as e:
+            self.channel.basic_publish(
+                exchange="", routing_key=self.queue_name, body=message
+            )
+        except (
+            pika.exceptions.ConnectionClosedByBroker,
+            pika.exceptions.AMQPChannelError,
+            pika.exceptions.AMQPConnectionError,
+        ) as e:
             logger.error(f"生产result失败，尝试重连。错误详情: {e}")
             self.reconnect()
-            self.channel.basic_publish(exchange='',
-                                       routing_key=self.queue_name,
-                                       body=message)
+            self.channel.basic_publish(
+                exchange="", routing_key=self.queue_name, body=message
+            )
             logger.info(f" [x] Sent '{message}' to queue '{self.queue_name}'")
             return
         except Exception as e:
@@ -52,7 +59,8 @@ class RabbitMQProducer:
                 logger.error(f"关闭连接时发生错误: {e}")
         self.connect()
 
+
 if __name__ == "__main__":
-    i2p_note_with2 = RabbitMQProducer("i2p_note_with2", True, {'x-message-ttl': 60000})
+    i2p_note_with2 = RabbitMQProducer("i2p_note_with2", True, {"x-message-ttl": 60000})
     mydic = {"ip": "12.12.34.64", "port": "7896", "result": "1"}
     i2p_note_with2.send_result(mydic)

@@ -9,6 +9,7 @@ from utils import getconfig, getlog
 config = getconfig.config
 logger = getlog.setup_logging("i2pnote")
 
+
 def get_url():
     base_url = config["crawl"]["base_url"]
     urls = []
@@ -21,20 +22,19 @@ def get_url():
     return urls
 
 
-
 def run():
     pusher = MySQLPusher(
-        config['mysql']['host'],
-        int(config['mysql']['port']),
-        config['mysql']['user'],
-        config['mysql']['password'],
-        config['mysql']['database']
+        config["mysql"]["host"],
+        int(config["mysql"]["port"]),
+        config["mysql"]["user"],
+        config["mysql"]["password"],
+        config["mysql"]["database"],
     )
     logger.info(f"{config['mysql']['host']}:{config['mysql']['port']} 数据库连接成功")
 
     urls = get_url()
     # TODO：加多线程爬虫
-    max_threads = int(config['crawl']['threads_num'])  # 最多开1个线程
+    max_threads = int(config["crawl"]["threads_num"])  # 最多开1个线程
     semaphore = threading.Semaphore(max_threads)
     threads = []
 
@@ -54,11 +54,13 @@ def run():
 
 if __name__ == "__main__":
     i = 0
-    while(True):
+    while True:
         i += 1
         logger.info(f"开始第 {i} 次爬虫")
         start_time = time.time()
         run()
         end_time = time.time()
-        logger.info(f"爬虫结束，本次爬虫用时 {int(end_time - start_time)} 秒，{config['crawl']['sleep_time']} 秒后开启下一次爬虫")
+        logger.info(
+            f"爬虫结束，本次爬虫用时 {int(end_time - start_time)} 秒，{config['crawl']['sleep_time']} 秒后开启下一次爬虫"
+        )
         time.sleep(int(config["crawl"]["sleep_time"]))

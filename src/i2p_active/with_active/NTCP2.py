@@ -14,18 +14,18 @@ from .connection import logger
 from cryptography.hazmat.backends import default_backend
 
 
-
-class NTCP2Establisher():
+class NTCP2Establisher:
     NTCP2_SESSION_REQUEST_MAX_SIZE = 287
+
     def __init__(self, m_RemoteIdentHash, m_IV, m_remoteStaticKey):
         self.m_RemoteIdentHash = m_RemoteIdentHash  # Bob的Hash
-        self.m_IV = m_IV                            # Bob的IV
+        self.m_IV = m_IV  # Bob的IV
         self.my_key = my_X25519()
         self.m_remoteStaticKey = m_remoteStaticKey
 
     def CreateSessionRequestMessage(self):
         # 共有三个部分：
-        # 1. obfuscated with RH_B  AES-CBC-256 encrypted X (32 bytes)       
+        # 1. obfuscated with RH_B  AES-CBC-256 encrypted X (32 bytes)
         # 2. ChaChaPoly frame (32 bytes) k defined in KDF for message 1
         # 3. unencrypted authenticated  padding (optional)  length defined in options block
 
@@ -35,31 +35,35 @@ class NTCP2Establisher():
         # +----+----+----+----+----+----+----+----+
         # |        tsA        |   Reserved (0)    |
         # +----+----+----+----+----+----+----+----+
-        
+
         paddingLength = os.urandom(1)[0] % (self.NTCP2_SESSION_REQUEST_MAX_SIZE - 64)
-        m_SessionRequestBufferLen = paddingLength + 64      # 会话请求缓冲区的长度
+        m_SessionRequestBufferLen = paddingLength + 64  # 会话请求缓冲区的长度
         self.m_SessionRequestBuffer = bytearray(m_SessionRequestBufferLen)
-        self.m_SessionRequestBuffer[64: 64+paddingLength] = get_random_bytes(paddingLength) # 会话请求的缓冲区
+        self.m_SessionRequestBuffer[64 : 64 + paddingLength] = get_random_bytes(
+            paddingLength
+        )  # 会话请求的缓冲区
         # 加密X
         # AES-256-CBC 加密
         encryption = AES.new(self.m_RemoteIdentHash, AES.MODE_CBC, self.m_IV)
-        self.m_SessionRequestBuffer[:32] = encryption.encrypt(self.my_key.get_public_byte())  # 加密Alice的公钥
+        self.m_SessionRequestBuffer[:32] = encryption.encrypt(
+            self.my_key.get_public_byte()
+        )  # 加密Alice的公钥
 
         self.KDF1Alice()
 
         options = bytearray(16)
         options[0] = 2  # 网络ID为2
         options[1] = 2  # 版本为2
-        options[2:4] = paddingLength.to_bytes(2, 'big')  # padLen
+        options[2:4] = paddingLength.to_bytes(2, "big")  # padLen
 
         # m3p2Len，这里的500是随机的一个数，在一个范围
-        buf_len = 500  
+        buf_len = 500
         self.m3p2Len = buf_len + 4 + 16
-        options[4:6] = self.m3p2Len.to_bytes(2, 'big')
+        options[4:6] = self.m3p2Len.to_bytes(2, "big")
 
         # tsA
         seconds_since_epoch = int((time.time() * 1000 + 500) / 1000)
-        options[8:12] = struct.pack('>I', seconds_since_epoch)
+        options[8:12] = struct.pack(">I", seconds_since_epoch)
 
         # 初始化 12 字节的 nonce 数组，并将其设为零
         nonce = bytearray(12)
@@ -80,22 +84,22 @@ class NTCP2Establisher():
     # 用来验证SessionCreated是否符合NTCP2，从而判断Bob是否是i2p结点
     # data为sessioncreated
     def SessionConfirmed(self, data):
-            # 加密数据、密钥和 IV
-            self.KDF2Alice()
-            encrypted_data = data[32:64]
-            key = self.k
-            chacha = ChaCha20Poly1305(key)
-            nonce = bytearray(12)
-            associated_data = self.h
-            # 解密数据
-            try:
-                decrypted_data = chacha.decrypt(nonce, encrypted_data, associated_data)
-                logger.info(f"解密后的数据: {decrypted_data}")
-                return 100
-            except Exception as e:
-                logger.warn(f"解密错误")
-                return 301
-        
+        # 加密数据、密钥和 IV
+        self.KDF2Alice()
+        encrypted_data = data[32:64]
+        key = self.k
+        chacha = ChaCha20Poly1305(key)
+        nonce = bytearray(12)
+        associated_data = self.h
+        # 解密数据
+        try:
+            decrypted_data = chacha.decrypt(nonce, encrypted_data, associated_data)
+            logger.info(f"解密后的数据: {decrypted_data}")
+            return 100
+        except Exception as e:
+            logger.warn(f"解密错误")
+            return 301
+
     # 先解密Key，把Y解密出来
     def SessionConfirmed_key(self, data):
         if len(data) >= 64 and len(data) <= 287:
@@ -103,8 +107,10 @@ class NTCP2Establisher():
             encrypted_data = data[:32]
             key_rh_b = self.m_RemoteIdentHash
             iv = self.m_SessionRequestBuffer[16:32]
-            cipher = Cipher(algorithms.AES(key_rh_b), modes.CBC(iv), backend=default_backend())
-            
+            cipher = Cipher(
+                algorithms.AES(key_rh_b), modes.CBC(iv), backend=default_backend()
+            )
+
             decryptor = cipher.decryptor()
 
             # 解密数据
@@ -114,8 +120,8 @@ class NTCP2Establisher():
             except ValueError:
                 logger.warn("公钥验证失败")
                 return 202
-            
-        # 看看option的确定，这里的X的确定只能到这里了
+
+            # 看看option的确定，这里的X的确定只能到这里了
             return self.SessionConfirmed(data)
 
         else:
@@ -141,8 +147,6 @@ class NTCP2Establisher():
         # MixHash(rs)
         self.h = hashlib.sha256(self.h + rs).digest()
 
-
-
         # Alice ephemeral key X
         # MixHash(e.pubkey)
 
@@ -153,7 +157,9 @@ class NTCP2Establisher():
         # "es" message pattern
         # DH(e, rs) == DH(s, re)
         # Assuming you have Bob's public key for DH
-        bob_public_key = x25519.X25519PublicKey.from_public_bytes(self.m_remoteStaticKey)  # Bob's public key object of X25519
+        bob_public_key = x25519.X25519PublicKey.from_public_bytes(
+            self.m_remoteStaticKey
+        )  # Bob's public key object of X25519
 
         # Define input_key_material = 32 byte DH result of Alice's ephemeral key and Bob's static key
         self.input_key_material = self.my_key.get_private().exchange(bob_public_key)
@@ -165,12 +171,11 @@ class NTCP2Establisher():
         temp_key = hmac_sha256(self.ck, self.input_key_material)
 
         # Output 1
-        self.ck = hmac_sha256(temp_key, b'\x01')
+        self.ck = hmac_sha256(temp_key, b"\x01")
 
         # Output 2
         # Generate the cipher key k
-        self.k = hmac_sha256(temp_key, self.ck + b'\x02')
-
+        self.k = hmac_sha256(temp_key, self.ck + b"\x02")
 
     def KDF2Alice(self):
         self.h = hashlib.sha256(self.h + self.m_SessionRequestBuffer[32:64]).digest()
@@ -179,9 +184,9 @@ class NTCP2Establisher():
 
         def hmac_sha256(key, data):
             return hmac.new(key, data, hashlib.sha256).digest()
-        
+
         shared_key_material = self.my_key.private_key.exchange(self.bob_public_key)
-        
+
         temp_key = hmac_sha256(self.ck, shared_key_material)
         # 设置新的链接密钥
         self.ck = hmac_sha256(temp_key, b"\x01")
@@ -190,8 +195,7 @@ class NTCP2Establisher():
         self.k = hmac_sha256(temp_key, self.ck + b"\x02")
 
 
-
-class my_X25519():
+class my_X25519:
     def __init__(self):
         # 生成一个新的 X25519 私钥
         self.private_key = x25519.X25519PrivateKey.generate()
@@ -201,18 +205,16 @@ class my_X25519():
     def get_public_byte(self):
         # 将公钥序列化为小端格式的字节
         ephemeral_key = self.public_key.public_bytes(
-            encoding=serialization.Encoding.Raw,
-            format=serialization.PublicFormat.Raw
+            encoding=serialization.Encoding.Raw, format=serialization.PublicFormat.Raw
         )
         # 32字节，小端格式
         return ephemeral_key
 
     def get_public(self):
         return self.public_key
-    
+
     def get_private(self):
         return self.private_key
-
 
 
 if __name__ == "__main__":

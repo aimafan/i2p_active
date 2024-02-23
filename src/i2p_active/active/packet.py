@@ -10,7 +10,7 @@ def random_create(length: int):
     return random_bytes
 
 
-def generate_consecutive_packets(packet_size: int, pre_packet=b'0', packet_count=10):
+def generate_consecutive_packets(packet_size: int, pre_packet=b"0", packet_count=10):
     """
     生成一系列大小相同的随机数据包。
 
@@ -26,7 +26,7 @@ def generate_consecutive_packets(packet_size: int, pre_packet=b'0', packet_count
     """
     a = []
 
-    if pre_packet != b'0':
+    if pre_packet != b"0":
         a.append(pre_packet + random_create(packet_size - 8))
     for i in range(1, packet_count):
         if packet_size == 1:
@@ -34,6 +34,7 @@ def generate_consecutive_packets(packet_size: int, pre_packet=b'0', packet_count
         data = random_create(packet_size)
         a.append(data)
     return a
+
 
 def detectReplayAttackPacket(packet_size: int, packet_count=10):
     """
@@ -47,6 +48,7 @@ def detectReplayAttackPacket(packet_size: int, packet_count=10):
         a.append(data)
     return a, prebyte
 
+
 def customized_packet(packet_size: int, pre_size: int, packet_count=10):
     a = []
     a.append(random_create(pre_size))
@@ -54,6 +56,7 @@ def customized_packet(packet_size: int, pre_size: int, packet_count=10):
         data = random_create(packet_size)
         a.append(data)
     return a
+
 
 # 进行多次连接中包的生成
 def packet_generate():
@@ -66,13 +69,14 @@ def packet_generate():
     packet_dic[4] = generate_consecutive_packets(packet_size=1, packet_count=3)
     packet_dic[5] = generate_consecutive_packets(1)
 
-
     return packet_dic
+
 
 # 第二次探测连接中包的生成
 def packet2_generate():
     packet_dic = {6: [], 7: [], 8: [], 9: []}
     packet_dic[6] = generate_consecutive_packets(1, packet_count=70)
+
     def one62one():
         a = []
         a.append(random_create(1))
@@ -82,8 +86,9 @@ def packet2_generate():
             data = random_create(1)
             a.append(data)
         return a
+
     packet_dic[7] = one62one()
     packet_dic[8] = one62one()
     packet_dic[9] = one62one()
-    
+
     return packet_dic

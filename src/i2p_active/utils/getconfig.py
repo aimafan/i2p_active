@@ -17,4 +17,3 @@ config.read(config_path)
 #         'password': config['database']['password'],
 #         'database': config['database']['database']
 #     }
-
