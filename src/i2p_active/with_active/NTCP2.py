@@ -1,11 +1,9 @@
 import os
 import time
 from Crypto.Cipher import AES
-from Crypto.Cipher import ChaCha20_Poly1305
 from Crypto.Random import get_random_bytes
 from cryptography.hazmat.primitives.asymmetric import x25519
 from cryptography.hazmat.primitives import serialization
-from cryptography.hazmat.primitives.asymmetric.x25519 import X25519PrivateKey
 import hashlib
 import hmac
 import struct
@@ -50,11 +48,11 @@ class NTCP2Establisher():
         self.KDF1Alice()
 
         options = bytearray(16)
-        options[0] = 2  # 假定网络ID为2
-        options[1] = 2  # 版本
+        options[0] = 2  # 网络ID为2
+        options[1] = 2  # 版本为2
         options[2:4] = paddingLength.to_bytes(2, 'big')  # padLen
 
-        # m3p2Len，这部分等会再写
+        # m3p2Len，这里的500是随机的一个数，在一个范围
         buf_len = 500  
         self.m3p2Len = buf_len + 4 + 16
         options[4:6] = self.m3p2Len.to_bytes(2, 'big')
@@ -62,6 +60,7 @@ class NTCP2Establisher():
         # tsA
         seconds_since_epoch = int((time.time() * 1000 + 500) / 1000)
         options[8:12] = struct.pack('>I', seconds_since_epoch)
+
         # 初始化 12 字节的 nonce 数组，并将其设为零
         nonce = bytearray(12)
 
@@ -81,7 +80,7 @@ class NTCP2Establisher():
     # 用来验证SessionCreated是否符合NTCP2，从而判断Bob是否是i2p结点
     # data为sessioncreated
     def SessionConfirmed(self, data):
-            # 假设的加密数据、密钥和 IV（您需要用实际的数据替换这些）
+            # 加密数据、密钥和 IV
             self.KDF2Alice()
             encrypted_data = data[32:64]
             key = self.k
@@ -90,7 +89,6 @@ class NTCP2Establisher():
             associated_data = self.h
             # 解密数据
             try:
-                # 如果有附加数据，将其作为第二个参数传递
                 decrypted_data = chacha.decrypt(nonce, encrypted_data, associated_data)
                 logger.info(f"解密后的数据: {decrypted_data}")
                 return 100
@@ -98,9 +96,10 @@ class NTCP2Establisher():
                 logger.warn(f"解密错误")
                 return 301
         
+    # 先解密Key，把Y解密出来
     def SessionConfirmed_key(self, data):
         if len(data) >= 64 and len(data) <= 287:
-            # 假设的加密数据、密钥和 IV（您需要用实际的数据替换这些）
+            # 加密数据、密钥和 IV
             encrypted_data = data[:32]
             key_rh_b = self.m_RemoteIdentHash
             iv = self.m_SessionRequestBuffer[16:32]
@@ -116,7 +115,7 @@ class NTCP2Establisher():
                 logger.warn("公钥验证失败")
                 return 202
             
-        # 看看option的确定，这里的这个公钥确定只能到这里了
+        # 看看option的确定，这里的X的确定只能到这里了
             return self.SessionConfirmed(data)
 
         else:
@@ -172,7 +171,6 @@ class NTCP2Establisher():
         # Generate the cipher key k
         self.k = hmac_sha256(temp_key, self.ck + b'\x02')
 
-        # End of "es" message pattern
 
     def KDF2Alice(self):
         self.h = hashlib.sha256(self.h + self.m_SessionRequestBuffer[32:64]).digest()

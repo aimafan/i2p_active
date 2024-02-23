@@ -37,7 +37,7 @@ def write_result(host, port, result, times):
     result_file_path = os.path.join("/" + result_file_path, "data", "with_active_result.txt")
     
     # 将结果以 "host:port result" 的形式写入文件
-    with open(result_file_path, 'a') as file:  # 使用 'a' 模式以追加数据到文件
+    with open(result_file_path, 'a') as file:  
         file.write(f"{host}:{port}  {result}, 第{times}次\n")
 
 
