@@ -178,6 +178,7 @@ def connect(host, port, packetbyte):
             try:
                 client_socket.settimeout(socket_second)  # 发送数据包之后等的时间
                 if len(packetbyte) > count:
+                    logger.info("发的长度 " + str(len(packetbyte[count])))
                     client_socket.sendall(packetbyte[count])
                 else:
                     break

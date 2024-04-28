@@ -5,3 +5,5 @@ logs/*
 test
 .vscode
 output.csv
+output.pcap
+.DS_Store
